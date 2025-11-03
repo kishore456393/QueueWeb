@@ -230,8 +230,8 @@ class WebQueueDetector:
     
     def detect_and_count(self, frame):
         """Detect people and count per queue"""
-        # Tuned confidence for better precision; still detect enough people
-        results = self.model(frame, conf=0.35, iou=0.5, classes=[0], verbose=False)[0]
+        # Lower confidence threshold for more sensitive detection
+        results = self.model(frame, conf=0.2, iou=0.5, classes=[0], verbose=False)[0]
         
         queue_counts = [0] * len(self.polygons)
         all_detections = []

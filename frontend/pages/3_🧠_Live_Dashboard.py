@@ -522,6 +522,17 @@ data_dir = Path(__file__).parent.parent.parent / 'data'
 frame_path = data_dir / 'live_frame.jpg'
 json_path = data_dir / 'queues.json'
 
+# Show refresh indicator
+if auto_refresh and 'count' in locals():
+    st.markdown(f"""
+    <div style='position: fixed; top: 70px; right: 20px; z-index: 999; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                color: white; font-size: 12px; font-weight: 600;'>
+        🔄 Live • Update #{count} • Every {refresh_rate}s
+    </div>
+    """, unsafe_allow_html=True)
+
 # Check if data exists
 if not json_path.exists():
     st.warning("⚠️ No detection data available")
@@ -544,10 +555,32 @@ if not json_path.exists():
             st.switch_page("pages/2_🎥_Video_Upload.py")
     st.stop()
 
-# Load data
+# Load data fresh on each refresh
 try:
-    with open(json_path) as f:
+    with open(json_path, 'r') as f:
         data = json.load(f)
+    
+    # Get file modification time to show data freshness
+    data_mod_time = os.path.getmtime(json_path)
+    data_age = time.time() - data_mod_time
+    
+    if data_age < 5:
+        freshness_color = "#10b981"  # Green
+        freshness_text = "🟢 Fresh"
+    elif data_age < 30:
+        freshness_color = "#f59e0b"  # Orange
+        freshness_text = "🟡 Recent"
+    else:
+        freshness_color = "#ef4444"  # Red
+        freshness_text = "🔴 Stale"
+    
+    st.markdown(f"""
+    <div style='text-align: right; color: {freshness_color}; font-size: 13px; 
+                font-weight: 600; margin-bottom: 10px;'>
+        {freshness_text} • Data age: {data_age:.1f}s
+    </div>
+    """, unsafe_allow_html=True)
+    
 except Exception as e:
     st.error(f"Error loading data: {e}")
     st.stop()
@@ -678,7 +711,9 @@ with col1:
         st.markdown('<div class="section-header"><h2 class="section-title">📹 Live Video Feed</h2></div>', unsafe_allow_html=True)
         if frame_path.exists():
             st.markdown('<div class="video-container">', unsafe_allow_html=True)
-            st.image(str(frame_path), use_column_width=True)
+            # Force image refresh by reading it fresh each time
+            image = Image.open(frame_path)
+            st.image(image, use_container_width=True)
             
             # Add timestamp below video with Figma styling
             timestamp = data.get('timestamp', '')
@@ -816,7 +851,6 @@ if show_chart:
             xaxis=dict(
                 title=None,
                 tickfont=dict(size=13, color='#cbd5e1', family='Inter'),
-                gridcolor='transparent',
                 showgrid=False,
                 linecolor="#4b5563",
                 linewidth=1,
