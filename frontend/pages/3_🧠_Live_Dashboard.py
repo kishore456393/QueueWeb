@@ -711,9 +711,11 @@ with col1:
         st.markdown('<div class="section-header"><h2 class="section-title">📹 Live Video Feed</h2></div>', unsafe_allow_html=True)
         if frame_path.exists():
             st.markdown('<div class="video-container">', unsafe_allow_html=True)
-            # Force image refresh by reading it fresh each time
-            image = Image.open(frame_path)
-            st.image(image, use_container_width=True)
+            # Display image directly from path to avoid truncation issues
+            try:
+                st.image(str(frame_path), use_column_width=True)
+            except Exception as e:
+                st.warning(f"📷 Video frame loading... ({str(e)[:50]})")
             
             # Add timestamp below video with Figma styling
             timestamp = data.get('timestamp', '')
@@ -883,12 +885,12 @@ if show_chart:
                 font_size=13,
                 font_family='Inter',
                 font_color='#ffffff',
-                bordercolor='transparent'
+                bordercolor='#374151'
             ),
             bargap=0.3
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.info("📊 No queue data available for chart")
