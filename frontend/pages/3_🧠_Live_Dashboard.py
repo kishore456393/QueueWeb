@@ -1010,14 +1010,17 @@ with col2:
         </div>
         """, unsafe_allow_html=True)
     
-# Visualization Chart
+# Visualization Chart - Full Width Section
 st.markdown("###")
+st.markdown("---")
 if show_chart:
     st.markdown('<div class="section-header"><h2 class="section-title">📈 Queue Comparison Chart</h2></div>', unsafe_allow_html=True)
     
     queue_counts = data.get('queue_counts', [])
     
     if len(queue_counts) > 0:
+        st.markdown(f"<p style='color: #94a3b8; font-size: 0.9rem;'>Displaying data for {len(queue_counts)} queues</p>", unsafe_allow_html=True)
+        
         # Figma-style graph container
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         
