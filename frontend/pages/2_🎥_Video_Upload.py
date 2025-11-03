@@ -31,25 +31,35 @@ st.markdown("""
         box-sizing: border-box;
     }
     
-    /* ===== ROOT VARIABLES (Figma Design) ===== */
+    /* ===== ROOT VARIABLES (Professional Dark Theme) ===== */
     :root {
-        --bg-primary: #f8f9fd;
-        --bg-secondary: #eef2ff;
-        --surface: #ffffff;
-        --border: #e2e8f0;
-        --text-primary: #1a202c;
-        --text-secondary: #718096;
-        --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --accent-primary: #667eea;
-        --radius-xl: 1rem; /* 16px */
-        --radius-lg: 0.75rem; /* 12px */
-        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --surface: #334155;
+        --surface-light: #475569;
+        --border: #475569;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --accent-primary: #6366f1;
+        --accent-secondary: #8b5cf6;
+        --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --radius-xl: 1.5rem;
+        --radius-lg: 1rem;
+        --radius-md: 0.75rem;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
     }
     
     /* ===== MAIN LAYOUT ===== */
     .main {
-        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%) !important;
+        background: var(--bg-primary) !important;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
     }
     
     .block-container {
@@ -145,6 +155,12 @@ st.markdown("""
         background: var(--accent-gradient) !important;
         color: white !important;
         border: none !important;
+        box-shadow: var(--shadow-lg) !important;
+    }
+    
+    .stButton>button[kind="primary"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: var(--shadow-lg) !important;
     }
     
     /* ===== FILE UPLOADER ===== */
@@ -155,25 +171,81 @@ st.markdown("""
         padding: 1.5rem;
     }
     
+    [data-testid="stFileUploadDropzone"] {
+        background: var(--bg-secondary) !important;
+        border: 2px dashed var(--border) !important;
+        border-radius: var(--radius-lg) !important;
+    }
+    
     /* ===== METRICS ===== */
     .metric-card {
-        background: var(--bg-primary);
+        background: var(--surface);
         padding: 1.5rem;
         border-radius: var(--radius-xl);
         text-align: center;
         border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
     }
     
     .metric-value {
         font-size: 1.75rem;
         font-weight: 700;
-        color: var(--accent-primary);
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     .metric-label {
         font-size: 0.9rem;
         color: var(--text-secondary);
         margin-top: 0.25rem;
+        font-weight: 600;
+    }
+    
+    /* ===== STREAMLIT WIDGETS ===== */
+    .stTextInput>div>div>input,
+    .stTextArea>div>div>textarea,
+    .stSelectbox>div>div>select {
+        background: var(--surface) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-md) !important;
+    }
+    
+    .stTextInput>div>div>input:focus,
+    .stTextArea>div>div>textarea:focus,
+    .stSelectbox>div>div>select:focus {
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 1px var(--accent-primary) !important;
+    }
+    
+    /* ===== SUCCESS/WARNING/ERROR MESSAGES ===== */
+    .stSuccess, .stWarning, .stError, .stInfo {
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-lg) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .stSuccess {
+        border-left: 4px solid var(--success) !important;
+    }
+    
+    .stWarning {
+        border-left: 4px solid var(--warning) !important;
+    }
+    
+    /* ===== EXPANDER ===== */
+    .streamlit-expanderHeader {
+        background: var(--surface) !important;
+        color: var(--text-primary) !important;
+        border-radius: var(--radius-lg) !important;
+    }
+    
+    .streamlit-expanderContent {
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
     }
     
     /* ===== HIDE STREAMLIT BRANDING ===== */
