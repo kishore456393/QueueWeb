@@ -44,3 +44,120 @@ QueueGuidance-Web/
 3. Click **Run Detection**
 4. View results in **Live Dashboard**
 5. Check historical data in **Analytics**
+
+## End-to-End Workflow
+
+This project runs as a simple file-based pipeline that keeps the dashboard live without a database. Here’s how the pieces fit together:
+
+1) Upload video (frontend/pages/2_🎥_Video_Upload.py)
+- You upload a video (MP4/AVI/MOV/MKV); it’s saved under `data/<filename>`.
+- The first frame is extracted (for preview) and shown in the UI.
+
+2) Draw queue zones (external OpenCV window)
+- Click “Start Drawing Queue Zones” → “Open Drawing Window”.
+- An OpenCV window opens from the backend to draw polygons over the first frame.
+- Controls:
+	- Left Click: add point
+	- Right Click: complete polygon
+	- Middle Click: delete last polygon
+	- S: save & continue, Q: quit
+- When saved, polygons are written to `data/polygons.json` with this shape:
+
+```json
+{
+	"video_path": "<absolute path to video>",
+	"timestamp": "2025-01-01T12:34:56.789012",
+	"queue_count": 3,
+	"polygons": [
+		[[x1, y1], [x2, y2], [x3, y3], ...],
+		[[...]],
+		[[...]]
+	]
+}
+```
+
+3) Start AI detection (backend/detection_engine.py)
+- Click “Start Detection”. The backend launches headless detection using the uploaded video and the saved polygons.
+- Model: YOLOv8 (prefers `QueueGuidance/yolov8s.pt`, falls back to `yolov8m.pt`).
+- Detection settings:
+	- `conf=0.15`, `iou=0.5`, `classes=[0]` (person)
+	- Tiny box filter: drops boxes < 0.3% of frame area
+	- Positioning: uses the bottom-center of each box as the person’s point
+	- Point-in-polygon: assigns each person to the first queue polygon that contains the point
+	- Smoothing: averages queue counts over a short window (last 5 measurements) to reduce jitter
+- For each processed frame (every ~2 frames for performance):
+	- Annotated frame is saved to `data/live_frame.jpg`
+	- A JSON summary is saved to `data/queues.json` (see schema below)
+
+4) Live dashboard (frontend/pages/3_🧠_Live_Dashboard.py)
+- Uses an auto-refresh loop (1–10s interval) to re-read `data/queues.json` and redisplay `data/live_frame.jpg`.
+- Shows metrics (total people, active queues, best/avoid queue), queue cards, a comparison bar chart, and the live frame timestamp.
+- Data freshness badge is computed from the JSON file’s modification time.
+- Optional audio announcements (edge-tts + pygame) announce the current best queue at a configurable interval.
+
+### Data Contracts
+
+1) polygons.json (written by the polygon drawing tool)
+
+```json
+{
+	"video_path": "c:/path/to/data/video.mp4",
+	"timestamp": "2025-01-01T12:34:56.789012",
+	"queue_count": 3,
+	"polygons": [
+		[[120, 200], [300, 210], [320, 400], [110, 380]],
+		[[400, 180], [580, 200], [600, 360], [420, 340]],
+		[[650, 220], [800, 230], [820, 380], [660, 360]]
+	]
+}
+```
+
+2) queues.json (written continuously by the detector)
+
+```json
+{
+	"timestamp": "2025-01-01T12:35:07.123456",
+	"total_queues": 3,
+	"queue_counts": [5, 2, 0],
+	"total_people": 7,
+	"best_queue": 3,
+	"worst_queue": 1,
+	"recommendation": "Queue 3 is fastest with 0 people"
+}
+```
+
+3) live_frame.jpg (written continuously by the detector)
+- An annotated image showing polygons, counts, and person boxes. The dashboard displays this as the “Live Video Feed.”
+
+### Refresh & Update Cycle
+- Backend loop saves `live_frame.jpg` and `queues.json` every ~2 frames while the video plays.
+- The dashboard auto-refreshes at your selected interval to pick up the latest values.
+- The “Fresh/Recent/Stale” badge is based on `queues.json` file age.
+
+### Tuning & Configuration
+- Detection threshold: change `conf` and `iou` in `backend/detection_engine.py` → `WebQueueDetector.detect_and_count`.
+- Tiny-box filtering: adjust `min_box_area_ratio` (default `0.003` = 0.3% of frame area).
+- Smoothing window: update `count_history = deque(maxlen=5)` to increase/decrease averaging.
+- Audio announcements: enable in dashboard sidebar; interval defaults to 30s and is configurable.
+
+### Troubleshooting
+- No data shown in dashboard
+	- Ensure you completed polygons: check `data/polygons.json` exists and has a positive `queue_count`.
+	- Ensure detection is running: `data/queues.json` and `data/live_frame.jpg` should be updating.
+- Polygon window didn’t open
+	- On Windows, make sure no other OpenCV window is blocking focus; try again via “Open Drawing Window.”
+- “Stale” data badge
+	- The detector may have stopped or crashed. Re-start detection from the Setup page.
+- Image truncation errors
+	- The dashboard reads the image path directly; transient “truncated” reads are handled, but if persistent, verify write permissions on `data/`.
+- Audio not working
+	- Install optional deps: `pip install edge-tts pygame` and ensure audio output is available.
+- Plotly display issues
+	- Only use valid color values (hex or named colors supported by Plotly). The current configuration adheres to this.
+
+### How It All Connects
+- Frontend writes: video file → `data/`, and orchestrates polygon drawing and detector launch.
+- Backend writes: `data/polygons.json` (zones), `data/queues.json` (counts + recommendation), `data/live_frame.jpg` (annotated frame).
+- Dashboard reads: `queues.json` and `live_frame.jpg` on each refresh and renders metrics, cards, chart, and live view.
+
+If you need a diagram or want this in a dedicated docs page, we can add `docs/workflow.md` and a simple architecture diagram next.

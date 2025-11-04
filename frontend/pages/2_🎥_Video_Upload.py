@@ -255,6 +255,65 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Floating Sidebar Toggle (helps when header toggle is hidden)
+import streamlit.components.v1 as components
+components.html(
+        """
+        <script>
+        (function(){
+            try {
+                const d = window.parent.document;
+                if (d.querySelector('.qs-toggle-btn')) return;
+                const wrap = d.createElement('div');
+                wrap.className = 'qs-toggle-btn';
+                wrap.style.position = 'fixed';
+                wrap.style.top = '16px';
+                wrap.style.left = '16px';
+                wrap.style.zIndex = '10000';
+                const btn = d.createElement('button');
+                btn.title = 'Open sidebar';
+                btn.textContent = '☰';
+                btn.style.background = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)';
+                btn.style.color = '#fff';
+                btn.style.border = '0';
+                btn.style.borderRadius = '999px';
+                btn.style.padding = '8px 12px';
+                btn.style.fontWeight = '700';
+                btn.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
+                btn.style.cursor = 'pointer';
+                btn.onclick = function(){
+                    const sels = [
+                        "[data-testid='collapsedControl']",
+                        "button[title='Expand sidebar']",
+                        "button[title='Collapse sidebar']",
+                        "button[aria-label*='sidebar' i]"
+                    ];
+                    let clicked = false;
+                    for (const s of sels) { const el = d.querySelector(s); if (el) { el.click(); clicked = true; break; } }
+                    if (!clicked) {
+                        let style = d.getElementById('qs-force-sidebar-style');
+                        if (!style) {
+                            style = d.createElement('style');
+                            style.id = 'qs-force-sidebar-style';
+                            style.textContent = `
+                              [data-testid="stSidebar"] { transform: none !important; visibility: visible !important; }
+                              .main .block-container { margin-left: 21rem !important; }
+                            `;
+                            d.head.appendChild(style);
+                        }
+                        const sb = d.querySelector('[data-testid="stSidebar"]');
+                        if (sb) sb.setAttribute('aria-expanded', 'true');
+                    }
+                };
+                wrap.appendChild(btn);
+                d.body.appendChild(wrap);
+            } catch(e) { /* ignore */ }
+        })();
+        </script>
+        """,
+        height=0,
+)
+
 # Initialize session state
 if 'video_uploaded' not in st.session_state:
     st.session_state.video_uploaded = False
